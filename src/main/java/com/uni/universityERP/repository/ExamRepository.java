@@ -1,0 +1,4 @@
+package com.uni.universityERP.repository;
+
+public class ExamRepository {
+}
