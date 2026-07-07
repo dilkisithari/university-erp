@@ -1,4 +1,4 @@
-package com.uni.universityERP.controller;
+package src.main.java.com.uni.universityERP.controller;
 
 public class CourseController {
 }

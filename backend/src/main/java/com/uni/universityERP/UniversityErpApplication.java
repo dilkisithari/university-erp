@@ -1,4 +1,4 @@
-package com.uni.universityERP;
+package src.main.java.com.uni.universityERP;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

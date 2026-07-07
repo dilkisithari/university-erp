@@ -1,4 +1,4 @@
-package com.uni.universityERP.repository;
+package src.main.java.com.uni.universityERP.repository;
 
 public class CourseRepository {
 }

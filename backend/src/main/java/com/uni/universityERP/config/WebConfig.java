@@ -1,4 +1,4 @@
-package com.uni.universityERP.config;
+package src.main.java.com.uni.universityERP.config;
 
 public class WebConfig {
 }

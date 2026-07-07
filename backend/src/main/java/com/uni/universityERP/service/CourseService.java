@@ -1,4 +1,4 @@
-package com.uni.universityERP.service;
+package src.main.java.com.uni.universityERP.service;
 
 public class CourseService {
 }

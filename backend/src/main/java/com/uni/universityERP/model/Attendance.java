@@ -1,4 +1,4 @@
-package com.uni.universityERP.model;
+package src.main.java.com.uni.universityERP.model;
 
 public class Attendance {
 }
