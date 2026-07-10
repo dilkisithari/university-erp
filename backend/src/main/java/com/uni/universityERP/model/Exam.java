@@ -1,4 +1,5 @@
 package src.main.java.com.uni.universityERP.model;
+<<<<<<< HEAD
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -29,4 +30,8 @@ public class Exam {
     private Double totalMarks = 100.0;
 
     private Boolean isActive = true;
+=======
+public class Exam {
+
+>>>>>>> c8bb31b97e057c658a004bf4b772e798b1ea1c6a
 }
