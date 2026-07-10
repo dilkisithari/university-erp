@@ -11,7 +11,6 @@ import java.util.Optional;
 @Service
 public class ExamService {
 
-<<<<<<< HEAD
     @Autowired
     private ExamRepository examRepository;
 
@@ -30,6 +29,4 @@ public class ExamService {
     public void deleteExam(Long id) {
         examRepository.deleteById(id);
     }
-=======
->>>>>>> c8bb31b97e057c658a004bf4b772e798b1ea1c6a
 }

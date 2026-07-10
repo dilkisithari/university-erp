@@ -1,5 +1,4 @@
 package src.main.java.com.uni.universityERP.controller;
-<<<<<<< HEAD
 
 import src.main.java.com.uni.universityERP.model.Exam;
 import src.main.java.com.uni.universityERP.service.ExamService;
@@ -32,8 +31,4 @@ public class ExamController {
         examService.saveExam(exam);
         return "redirect:/exams";
     }
-=======
-public class ExamController {
-
->>>>>>> c8bb31b97e057c658a004bf4b772e798b1ea1c6a
 }
