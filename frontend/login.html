@@ -322,6 +322,7 @@
     </div>
   </div>
 
+<script src="api-config.js"></script>
 <script>
   // Toggle password visibility
   const togglePass = document.getElementById('togglePass');
@@ -332,29 +333,61 @@
     togglePass.textContent = isHidden ? 'Hide' : 'Show';
   });
 
-  // Demo login handling — replace the checkCredentials logic with a real API call
   const form = document.getElementById('loginForm');
   const errorMsg = document.getElementById('errorMsg');
+  const signInBtn = form.querySelector('.btn-login');
+  const defaultBtnHtml = signInBtn.innerHTML;
 
-  // TEMPORARY demo credentials until Member 9 wires this up to the live backend
-  const DEMO_USER = { username: 'admin', password: 'admin123' };
-
-  form.addEventListener('submit', function (e) {
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
     const username = document.getElementById('username').value.trim();
-    const password = passwordInput.value.trim();
+    const password = passwordInput.value;
 
     if (!username || !password) {
       showError('Please fill in both fields.');
       return;
     }
 
-    // Placeholder auth check — swap this block for a fetch() call to the backend
-    if (username === DEMO_USER.username && password === DEMO_USER.password) {
-      errorMsg.classList.remove('show');
-      window.location.href = 'dashboard.html';
-    } else {
-      showError('Invalid username or password. Please try again.');
+    signInBtn.disabled = true;
+    signInBtn.textContent = 'Signing in...';
+
+    try {
+      const response = await fetch(window.UNI_ERP_API_BASE_URL + '/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username: username, password: password })
+      });
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = null;
+      }
+
+      if (response.ok && data && data.success === true) {
+        errorMsg.classList.remove('show');
+        sessionStorage.setItem('uniERP_loggedIn', 'true');
+        if (data.username) {
+          sessionStorage.setItem('uniERP_username', data.username);
+        }
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      if (response.status === 401) {
+        showError('Invalid username or password. Please try again.');
+      } else if (response.status === 400 && data && data.message) {
+        showError(data.message);
+      } else {
+        showError('Unable to connect to the server. Please try again.');
+      }
+    } catch (_) {
+      showError('Unable to connect to the server. Please try again.');
+    } finally {
+      signInBtn.disabled = false;
+      signInBtn.innerHTML = defaultBtnHtml;
     }
   });
 
