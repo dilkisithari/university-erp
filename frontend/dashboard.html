@@ -465,24 +465,99 @@
     </div>
   </div>
 
+<script src="api-config.js"></script>
 <script>
-  // ---- Placeholder data wiring ----
-  // Member 9 (Core API Link) should replace this block with real fetch() calls
-  // to the live backend once it's hosted on Azure, e.g.:
-  //
-  // fetch('/api/dashboard/summary')
-  //   .then(res => res.json())
-  //   .then(data => {
-  //     document.getElementById('statStudents').textContent = data.totalStudents;
-  //     document.getElementById('statCourses').textContent = data.totalCourses;
-  //     document.getElementById('statExams').textContent = data.examsScheduled;
-  //     document.getElementById('statAttendance').textContent = data.attendanceRate + '%';
-  //   });
+  function clearMember9Session() {
+    sessionStorage.removeItem('uniERP_loggedIn');
+    sessionStorage.removeItem('uniERP_username');
+  }
 
-  // Simple guard: bounce back to login if no session flag is set (demo only)
+  function formatAttendanceRate(rate) {
+    const n = Number(rate);
+    if (!Number.isFinite(n)) {
+      return '0%';
+    }
+    if (Number.isInteger(n)) {
+      return n + '%';
+    }
+    return n.toFixed(1) + '%';
+  }
+
+  function setUnavailableStats() {
+    document.getElementById('statStudents').textContent = '—';
+    document.getElementById('statCourses').textContent = '—';
+    document.getElementById('statExams').textContent = '—';
+    document.getElementById('statAttendance').textContent = '—';
+  }
+
+  async function loadDashboardSummary() {
+    try {
+      const response = await fetch(window.UNI_ERP_API_BASE_URL + '/api/dashboard/summary', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (response.status === 401) {
+        clearMember9Session();
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (!response.ok) {
+        console.error('Dashboard summary request failed:', response.status);
+        setUnavailableStats();
+        return;
+      }
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = null;
+      }
+
+      if (!data || typeof data !== 'object') {
+        console.error('Dashboard summary returned invalid JSON.');
+        setUnavailableStats();
+        return;
+      }
+
+      document.getElementById('statStudents').textContent = data.totalStudents ?? 0;
+      document.getElementById('statCourses').textContent = data.totalCourses ?? 0;
+      document.getElementById('statExams').textContent = data.examsScheduled ?? 0;
+      document.getElementById('statAttendance').textContent =
+        formatAttendanceRate(data.attendanceRate ?? 0);
+    } catch (_) {
+      console.error('Unable to load dashboard summary.');
+      setUnavailableStats();
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
-    // Uncomment once login.html actually sets this flag on successful sign-in:
-    // if (!sessionStorage.getItem('uniERP_loggedIn')) window.location.href = 'login.html';
+    if (!sessionStorage.getItem('uniERP_loggedIn')) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    loadDashboardSummary();
+
+    const logoutLink = document.getElementById('logoutLink');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          await fetch(window.UNI_ERP_API_BASE_URL + '/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+        } catch (_) {
+          // Clear local session even if backend logout fails.
+        } finally {
+          clearMember9Session();
+          window.location.href = 'login.html';
+        }
+      });
+    }
   });
 </script>
 </body>
