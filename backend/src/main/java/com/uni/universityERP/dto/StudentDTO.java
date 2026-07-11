@@ -1,4 +1,4 @@
-package com.uni.universityERP.dto;
+package src.main.java.com.uni.universityERP.dto;
 
 public class StudentDTO {
 }
