@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniERP — Student Registration</title>
+<style>
+  :root{
+    --navy-950:#0c1a34;
+    --navy-900:#0f2142;
+    --green-600:#16a34a;
+    --green-700:#128a3e;
+    --green-50:#eafbf1;
+    --ink-900:#1a2233;
+    --ink-600:#5b6478;
+    --ink-400:#94a0b4;
+    --line:#e6e9f0;
+    --bg:#f4f6fa;
+    --white:#ffffff;
+    --danger:#e04f4f;
+    --shadow: 0 1px 2px rgba(15,33,66,0.04), 0 8px 24px rgba(15,33,66,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(22,163,74,0.10), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(15,33,66,0.08), transparent 45%),
+      var(--bg);
+    min-height:100vh;
+    display:flex;
+    align-items:stretch;
+    color:var(--ink-900);
+  }
+
+  /* ---------- Left brand panel ---------- */
+  .brand-panel{
+    flex:0 0 40%;
+    background: linear-gradient(160deg, var(--navy-950) 0%, #14284d 55%, #17335f 100%);
+    color:var(--white);
+    padding:56px 52px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    position:relative;
+    overflow:hidden;
+  }
+  .brand-panel::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size:34px 34px;
+    mask-image: radial-gradient(circle at 30% 30%, black, transparent 70%);
+  }
+
+  /* Logo mark, matches the reference screenshot exactly */
+  .brand-mark{display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+  .brand-mark .logo{
+    width:40px;height:40px;border-radius:10px;
+    background: linear-gradient(135deg, var(--green-600), #21c25f);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow: 0 6px 16px rgba(22,163,74,0.35);
+    flex-shrink:0;
+  }
+  .brand-mark .logo svg{width:22px;height:22px;}
+  .brand-mark .name{font-size:19px;font-weight:700;letter-spacing:0.2px;line-height:1.2;}
+  .brand-mark .sub{font-size:11.5px;color:#9fb0cc;letter-spacing:0.2px;margin-top:1px;}
+
+  .brand-copy{position:relative;z-index:1;max-width:400px;}
+  .brand-copy h1{
+    font-size:32px;
+    line-height:1.28;
+    font-weight:700;
+    margin:0 0 16px 0;
+    letter-spacing:-0.3px;
+  }
+  .brand-copy p{
+    font-size:15px;
+    color:#b7c3dc;
+    line-height:1.65;
+    margin:0;
+  }
+
+  .brand-stats{
+    position:relative;z-index:1;
+    display:flex;
+    gap:28px;
+    padding-top:28px;
+    border-top:1px solid rgba(255,255,255,0.12);
+  }
+  .brand-stats div strong{display:block;font-size:22px;font-weight:700;}
+  .brand-stats div span{font-size:11.5px;color:#93a3c2;text-transform:uppercase;letter-spacing:0.3px;}
+
+  /* ---------- Right form panel ---------- */
+  .form-panel{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 24px;
+  }
+  .form-card{
+    width:100%;
+    max-width:520px;
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:40px 40px 32px;
+  }
+  .form-card .eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:600;color:var(--green-700);
+    background:var(--green-50);
+    padding:4px 10px;border-radius:20px;
+    margin-bottom:14px;
+  }
+  .form-card h2{
+    font-size:24px;margin:0 0 6px 0;font-weight:700;color:var(--ink-900);
+  }
+  .form-card .lede{
+    font-size:13.5px;color:var(--ink-600);margin:0 0 28px 0;
+  }
+  .form-card .lede a{color:var(--green-700);text-decoration:none;font-weight:600;}
+  .form-card .lede a:hover{text-decoration:underline;}
+
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block;font-size:11.5px;font-weight:700;color:var(--ink-600);
+    letter-spacing:0.4px;text-transform:uppercase;margin-bottom:7px;
+  }
+  .field label .opt{text-transform:none;font-weight:400;color:var(--ink-400);letter-spacing:0;}
+  .field input, .field select{
+    width:100%;
+    padding:11px 13px;
+    font-size:14px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--white);
+    color:var(--ink-900);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+    font-family:inherit;
+  }
+  .field select{appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%235b6478' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 13px center; padding-right:34px;
+  }
+  .field input::placeholder{color:var(--ink-400);}
+  .field input:focus, .field select:focus{
+    border-color:var(--green-600);
+    box-shadow:0 0 0 3px rgba(22,163,74,0.14);
+  }
+  .field.error input{border-color:var(--danger);}
+  .field .hint{font-size:11.5px;color:var(--ink-400);margin-top:6px;}
+  .field .hint.error{color:var(--danger);}
+
+  .pw-wrap{position:relative;}
+  .pw-toggle{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;
+    font-size:11.5px;font-weight:700;color:var(--ink-600);
+    padding:4px 6px;
+  }
+  .pw-toggle:hover{color:var(--green-700);}
+
+  .strength{display:flex;gap:4px;margin-top:8px;}
+  .strength i{flex:1;height:4px;border-radius:2px;background:var(--line);}
+  .strength.w1 i:nth-child(1){background:var(--danger);}
+  .strength.w2 i:nth-child(-n+2){background:#e0a03f;}
+  .strength.w3 i:nth-child(-n+3){background:var(--green-600);}
+
+  .terms{
+    display:flex; gap:10px; align-items:flex-start;
+    font-size:12.5px; color:var(--ink-600); line-height:1.5;
+    margin:6px 0 24px;
+  }
+  .terms input{margin-top:3px;flex-shrink:0;}
+  .terms a{color:var(--green-700);text-decoration:none;font-weight:600;}
+  .terms a:hover{text-decoration:underline;}
+
+  .submit-btn{
+    width:100%;
+    padding:13px;
+    border:none;border-radius:8px;
+    background:linear-gradient(135deg, var(--green-600), var(--green-700));
+    color:var(--white);
+    font-size:14.5px;font-weight:700;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    box-shadow:0 6px 16px rgba(22,163,74,0.28);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .submit-btn:hover{transform:translateY(-1px); box-shadow:0 8px 20px rgba(22,163,74,0.36);}
+  .submit-btn:active{transform:translateY(0);}
+  .submit-btn:disabled{opacity:0.55; cursor:not-allowed; transform:none;}
+
+  .footer-note{text-align:center;font-size:13px;color:var(--ink-600); margin-top:22px;}
+  .footer-note a{color:var(--green-700);font-weight:600;text-decoration:none;}
+  .footer-note a:hover{text-decoration:underline;}
+
+  .toast{
+    position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-16px);
+    background:var(--navy-950); color:#fff;
+    padding:12px 20px; border-radius:8px; font-size:13.5px; font-weight:600;
+    box-shadow:0 10px 24px rgba(0,0,0,0.25);
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    display:flex; align-items:center; gap:8px;
+    z-index:100;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast .dot{width:8px;height:8px;border-radius:50%;background:var(--green-600);}
+
+  @media (max-width: 900px){
+    body{flex-direction:column;}
+    .brand-panel{flex:none; padding:32px 26px;}
+    .brand-copy h1{font-size:24px;}
+    .brand-stats{padding-top:20px;}
+    .form-panel{padding:28px 18px 48px;}
+    .form-card{padding:28px 22px 26px;}
+    .row{grid-template-columns:1fr;gap:0;}
+  }
+
+  :focus-visible{outline:2px solid var(--green-600); outline-offset:2px;}
+</style>
+</head>
+<body>
+
+  <!-- Brand panel -->
+  <div class="brand-panel">
+    <div class="brand-mark">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3L1 8l11 5 9-4.09V15h2V8L12 3z" fill="#ffffff"/>
+          <path d="M5 10.18v3.64c0 .3.15.58.4.75C6.5 15.4 9.1 17 12 17s5.5-1.6 6.6-2.43c.25-.17.4-.45.4-.75v-3.64L12 13.7 5 10.18z" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div>
+        <div class="name">UniERP</div>
+        <div class="sub">Management System</div>
+      </div>
+    </div>
+
+    <div class="brand-copy">
+      <h1>Register as a student to get access to your courses, exams, and attendance.</h1>
+      <p>Create your student profile once and your registrar can enroll you into courses, track attendance, and publish exam results — all in one place.</p>
+    </div>
+
+    <div class="brand-stats">
+      <div><strong>0</strong><span>Total Students</span></div>
+      <div><strong>5</strong><span>Faculties</span></div>
+      <div><strong>-</strong><span>Most Common Year</span></div>
+    </div>
+  </div>
+
+  <!-- Form panel -->
+  <div class="form-panel">
+    <div class="form-card">
+      <span class="eyebrow">● New student</span>
+      <h2>Student Registration</h2>
+      <p class="lede">Already registered? <a href="#" id="signInLink">Sign in to your account</a></p>
+
+      <form id="registerForm" novalidate>
+
+        <div class="row">
+          <div class="field">
+            <label for="studentId">Student ID</label>
+            <input type="text" id="studentId" placeholder="e.g. STU20260145" required>
+          </div>
+          <div class="field">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" placeholder="e.g. Nimasha Perera" required>
+          </div>
+        </div>
+
+        <div class="field" id="emailField">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="e.g. nimasha.p@uni.edu" required>
+          <div class="hint" id="emailHint">We'll send a verification link to this address.</div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="faculty">Faculty</label>
+            <select id="faculty" required>
+              <option value="" selected disabled>Select faculty</option>
+              <option>Computing</option>
+              <option>Business</option>
+              <option>Engineering</option>
+              <option>Science</option>
+              <option>Arts</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="year">Year of Study</label>
+            <select id="year" required>
+              <option value="" selected disabled>Select year</option>
+              <option>Year 1</option>
+              <option>Year 2</option>
+              <option>Year 3</option>
+              <option>Year 4</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="phone">Phone Number <span class="opt">(optional)</span></label>
+          <input type="tel" id="phone" placeholder="e.g. 077 123 4567">
+        </div>
+
+        <div class="field" id="passwordField">
+          <label for="password">Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="password" placeholder="Minimum 8 characters" required>
+            <button type="button" class="pw-toggle" id="pwToggle">SHOW</button>
+          </div>
+          <div class="strength" id="strengthBar"><i></i><i></i><i></i></div>
+          <div class="hint" id="pwHint">Use 8+ characters with a number and a symbol.</div>
+        </div>
+
+        <div class="field" id="confirmField">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" placeholder="Re-enter your password" required>
+        </div>
+
+        <label class="terms">
+          <input type="checkbox" id="terms" required>
+          <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a> of UniERP.</span>
+        </label>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span>✓</span> Register
+        </button>
+      </form>
+
+      <p class="footer-note">Having trouble? <a href="#">Contact your faculty office</a></p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><span class="dot"></span><span id="toastText">Registered</span></div>
+
+<script>
+  const form = document.getElementById('registerForm');
+  const password = document.getElementById('password');
+  const confirmPassword = document.getElementById('confirmPassword');
+  const pwToggle = document.getElementById('pwToggle');
+  const strengthBar = document.getElementById('strengthBar');
+  const submitBtn = document.getElementById('submitBtn');
+  const toast = document.getElementById('toast');
+  const toastText = document.getElementById('toastText');
+
+  pwToggle.addEventListener('click', () => {
+    const isPw = password.type === 'password';
+    password.type = isPw ? 'text' : 'password';
+    pwToggle.textContent = isPw ? 'HIDE' : 'SHOW';
+  });
+
+  password.addEventListener('input', () => {
+    const v = password.value;
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[0-9]/.test(v) && /[^A-Za-z0-9]/.test(v)) score++;
+    if (v.length >= 12) score++;
+    strengthBar.className = 'strength' + (score > 0 ? ' w' + Math.min(score,3) : '');
+  });
+
+  function showToast(msg){
+    toastText.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  function setError(fieldId, hintId, message){
+    const field = document.getElementById(fieldId);
+    field.classList.add('error');
+    if (hintId){
+      const hint = document.getElementById(hintId);
+      hint.textContent = message;
+      hint.classList.add('error');
+    }
+  }
+  function clearError(fieldId, hintId, defaultMsg){
+    const field = document.getElementById(fieldId);
+    field.classList.remove('error');
+    if (hintId){
+      const hint = document.getElementById(hintId);
+      hint.textContent = defaultMsg;
+      hint.classList.remove('error');
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let valid = true;
+
+    clearError('emailField','emailHint',"We'll send a verification link to this address.");
+    clearError('passwordField','pwHint','Use 8+ characters with a number and a symbol.');
+    clearError('confirmField', null, null);
+
+    const emailVal = document.getElementById('email').value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){
+      setError('emailField','emailHint','Enter a valid email address.');
+      valid = false;
+    }
+
+    if (password.value.length < 8){
+      setError('passwordField','pwHint','Password must be at least 8 characters.');
+      valid = false;
+    }
+
+    if (confirmPassword.value !== password.value || confirmPassword.value === ''){
+      setError('confirmField', null, null);
+      valid = false;
+    }
+
+    if (!document.getElementById('terms').checked){
+      valid = false;
+      showToast('Please accept the Terms to continue');
+      return;
+    }
+
+    if (!valid){
+      showToast('Please fix the highlighted fields');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Registering…';
+    setTimeout(() => {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>✓</span> Register';
+      showToast('Registered — check your email to verify');
+      form.reset();
+      strengthBar.className = 'strength';
+    }, 900);
+  });
+</script>
+
+</body>
+</html>
