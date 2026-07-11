@@ -1,6 +1,6 @@
 package com.uni.universityERP.dto;
 
-public class StudentDto {
+public class StudentDTO {
 
     private Long id;
     private String studentId;
@@ -8,10 +8,10 @@ public class StudentDto {
     private String email;
     private String faculty;
 
-    public StudentDto() {
+    public StudentDTO() {
     }
 
-    public StudentDto(Long id, String studentId, String fullName, String email, String faculty) {
+    public StudentDTO(Long id, String studentId, String fullName, String email, String faculty) {
         this.id = id;
         this.studentId = studentId;
         this.fullName = fullName;
