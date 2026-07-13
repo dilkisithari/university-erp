@@ -318,83 +318,92 @@
       </form>
 
       <div class="divider">or</div>
-      <p class="signup-note">Don't have an account? <a href="#">Contact your administrator</a></p>
+      <p class="signup-note">Don't have an account? <a href="register.html">Register here</a></p>
     </div>
   </div>
 
-<script src="api-config.js"></script>
-<script>
-  // Toggle password visibility
-  const togglePass = document.getElementById('togglePass');
-  const passwordInput = document.getElementById('password');
-  togglePass.addEventListener('click', () => {
-    const isHidden = passwordInput.type === 'password';
-    passwordInput.type = isHidden ? 'text' : 'password';
-    togglePass.textContent = isHidden ? 'Hide' : 'Show';
-  });
 
-  const form = document.getElementById('loginForm');
-  const errorMsg = document.getElementById('errorMsg');
-  const signInBtn = form.querySelector('.btn-login');
-  const defaultBtnHtml = signInBtn.innerHTML;
+  <script>
+    const togglePass = document.getElementById('togglePass');
+    const passwordInput = document.getElementById('password');
 
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const username = document.getElementById('username').value.trim();
-    const password = passwordInput.value;
+    togglePass.addEventListener('click', () => {
+      const hidden = passwordInput.type === 'password';
 
-    if (!username || !password) {
-      showError('Please fill in both fields.');
-      return;
-    }
+      passwordInput.type = hidden ? 'text' : 'password';
+      togglePass.textContent = hidden ? 'Hide' : 'Show';
+    });
 
-    signInBtn.disabled = true;
-    signInBtn.textContent = 'Signing in...';
+    const form = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const signInBtn = form.querySelector('.btn-login');
+    const defaultBtnHtml = signInBtn.innerHTML;
 
-    try {
-      const response = await fetch(window.UNI_ERP_API_BASE_URL + '/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ username: username, password: password })
-      });
+    form.addEventListener('submit', function (e) {
 
-      let data = null;
-      try {
-        data = await response.json();
-      } catch (_) {
-        data = null;
-      }
+      e.preventDefault();
 
-      if (response.ok && data && data.success === true) {
-        errorMsg.classList.remove('show');
-        sessionStorage.setItem('uniERP_loggedIn', 'true');
-        if (data.username) {
-          sessionStorage.setItem('uniERP_username', data.username);
-        }
-        window.location.href = 'dashboard.html';
+      const username =
+        document.getElementById('username').value.trim();
+
+      const password =
+        document.getElementById('password').value;
+
+      if (!username || !password) {
+
+        showError(
+          'Please enter username and password.'
+        );
+
         return;
       }
 
-      if (response.status === 401) {
-        showError('Invalid username or password. Please try again.');
-      } else if (response.status === 400 && data && data.message) {
-        showError(data.message);
+      signInBtn.disabled = true;
+      signInBtn.textContent = 'Signing in...';
+
+      const savedUser =
+        JSON.parse(
+          localStorage.getItem('uniERPUser')
+        );
+
+      if (
+        savedUser &&
+        username === savedUser.username &&
+        password === savedUser.password
+      ) {
+
+        sessionStorage.setItem(
+          'uniERP_loggedIn',
+          'true'
+        );
+
+        sessionStorage.setItem(
+           'uniERP_fullName',
+           savedUser.fullName
+        );
+
+        alert('Login Successful!');
+
+        window.location.href =
+          'students.html';
+
       } else {
-        showError('Unable to connect to the server. Please try again.');
+
+        showError(
+          'Invalid username or password.'
+        );
       }
-    } catch (_) {
-      showError('Unable to connect to the server. Please try again.');
-    } finally {
+
       signInBtn.disabled = false;
       signInBtn.innerHTML = defaultBtnHtml;
-    }
-  });
+    });
 
-  function showError(msg) {
-    errorMsg.textContent = msg;
-    errorMsg.classList.add('show');
-  }
-</script>
+    function showError(message) {
+
+      errorMsg.textContent = message;
+
+      errorMsg.classList.add('show');
+    }
+  </script>
 </body>
 </html>

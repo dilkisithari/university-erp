@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UniERP — Student Registration</title>
+  <script src="api-config.js"></script>
 <style>
   :root{
     --navy-950:#0c1a34;
@@ -264,7 +265,11 @@
     <div class="form-card">
       <span class="eyebrow">● New student</span>
       <h2>Student Registration</h2>
-      <p class="lede">Already registered? <a href="#" id="signInLink">Sign in to your account</a></p>
+      <p class="lede">
+        Already registered?
+        <a href="login.html">Sign in to your account</a>
+      </p>
+
 
       <form id="registerForm" novalidate>
 
@@ -331,7 +336,11 @@
 
         <label class="terms">
           <input type="checkbox" id="terms" required>
-          <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a> of UniERP.</span>
+
+          <span>
+          I agree to the Terms of Service and Privacy Policy of UniERP.
+          </span>
+
         </label>
 
         <button type="submit" class="submit-btn" id="submitBtn">
@@ -339,13 +348,15 @@
         </button>
       </form>
 
-      <p class="footer-note">Having trouble? <a href="#">Contact your faculty office</a></p>
+      <p class="footer-note"> Already have an account? <a href="login.html">login</a></p>
     </div>
   </div>
 
   <div class="toast" id="toast"><span class="dot"></span><span id="toastText">Registered</span></div>
 
 <script>
+  const API_URL =
+    `${window.API_BASE_URL}/register`;
   const form = document.getElementById('registerForm');
   const password = document.getElementById('password');
   const confirmPassword = document.getElementById('confirmPassword');
@@ -431,14 +442,32 @@
     }
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = 'Registering…';
-    setTimeout(() => {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span>✓</span> Register';
-      showToast('Registered — check your email to verify');
-      form.reset();
-      strengthBar.className = 'strength';
-    }, 900);
+submitBtn.innerHTML = 'Registering...';
+
+const user = {
+  fullName:
+    document.getElementById('fullName').value,
+
+  username:
+    document.getElementById('email').value,
+
+  password:
+    document.getElementById('password').value
+};
+
+localStorage.setItem(
+  'uniERPUser',
+  JSON.stringify(user)
+);
+
+showToast('Registration Successful!');
+
+setTimeout(() => {
+
+  window.location.href =
+    'login.html';
+
+}, 1000);
   });
 </script>
 
