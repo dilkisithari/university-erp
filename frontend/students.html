@@ -928,11 +928,11 @@
   <script>
 
     // API Configuration with safety check
+
     if (typeof window.API_BASE_URL === 'undefined') {
-        console.error("❌ API_BASE_URL is not defined. Check api-config.js file.");
-        // Fallback (for testing)
-        window.API_BASE_URL = "https://university-erp-backend-app.azurewebsites.net/api";
-    }
+       console.error("❌ API_BASE_URL is not defined. Using localhost fallback.");
+       window.API_BASE_URL = "http://localhost:8080/api";
+}
 
     const API_URL = `${window.API_BASE_URL}/students`;
 
