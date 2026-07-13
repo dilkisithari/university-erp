@@ -10,6 +10,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="api-config.js"></script>
   <style>
     :root {
       --primary: #1E3A5F;
@@ -925,363 +926,185 @@
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
   <script>
-    const API_URL = 'http://localhost:8080/api/students';
-    const EXTRAS_KEY = 'studentDisplayExtras';
+
+    // API Configuration with safety check
+    if (typeof window.API_BASE_URL === 'undefined') {
+        console.error("❌ API_BASE_URL is not defined. Check api-config.js file.");
+        // Fallback (for testing)
+        window.API_BASE_URL = "https://university-erp-backend-app.azurewebsites.net/api";
+    }
+
+    const API_URL = `${window.API_BASE_URL}/students`;
 
     let allStudents = [];
-    let filteredStudents = [];
-    let usingFallback = false;
 
-    const FACULTY_CLASS = {
-      'Computing': 'faculty-computing',
-      'Business': 'faculty-business',
-      'Engineering': 'faculty-engineering',
-      'Science': 'faculty-science',
-      'Humanities': 'faculty-humanities'
-    };
-
-    const STATUS_CLASS = {
-      'Active': 'status-active',
-      'Inactive': 'status-inactive',
-      'Suspended': 'status-suspended'
-    };
-
-    const AVATAR_COLORS = ['#1E3A5F', '#2ECC71', '#F5A623', '#3B82F6', '#7C3AED', '#DB2777'];
-    const DEFAULT_YEARS = ['Year 1', 'Year 2', 'Year 3', 'Year 4'];
-
-    /* ── Display extras (year / phone) persisted locally ── */
-    function getExtras() {
-      try { return JSON.parse(localStorage.getItem(EXTRAS_KEY)) || {}; }
-      catch { return {}; }
-    }
-
-    function saveExtra(studentId, year, phone) {
-      const extras = getExtras();
-      extras[studentId] = { year, phone };
-      localStorage.setItem(EXTRAS_KEY, JSON.stringify(extras));
-    }
-
-    function enrichStudent(student, index) {
-      const extras = getExtras();
-      const extra = extras[student.studentId];
-      return {
-        ...student,
-        year: extra?.year || student.year || DEFAULT_YEARS[index % 4],
-        phone: extra?.phone || student.phone || '—',
-        status: student.status || 'Active'
-      };
-    }
-
-    function initials(name) {
-      return name.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase();
-    }
-
-    function avatarColor(name) {
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-      return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-    }
-
-    /* ── Toast ── */
+    /* ── Toast Notification ── */
     function showToast(message, type = 'success') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast-msg ${type}`;
-      const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
-      toast.innerHTML = `<i class="bi ${icon}"></i><span>${message}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.classList.add('toast-out');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast-msg ${type}`;
+        const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+        toast.innerHTML = `<i class="bi ${icon}"></i><span>${message}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('toast-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
-    /* ── Skeleton loader ── */
-    function showSkeleton() {
-      const tbody = document.getElementById('studentsTableBody');
-      let rows = '';
-      for (let i = 0; i < 5; i++) {
-        rows += `<tr class="skeleton-row">
-          <td><div class="skeleton w-30"></div></td>
-          <td><div class="skeleton w-50"></div></td>
-          <td><div class="skeleton w-70"></div></td>
-          <td><div class="skeleton w-40"></div></td>
-          <td><div class="skeleton w-30"></div></td>
-          <td><div class="skeleton w-70"></div></td>
-          <td><div class="skeleton w-40"></div></td>
-          <td><div class="skeleton w-30"></div></td>
-        </tr>`;
-      }
-      tbody.innerHTML = rows;
-    }
-
-    /* ── Count-up animation ── */
-    function animateValue(el, end, suffix = '') {
-      const duration = 600;
-      const start = 0;
-      const startTime = performance.now();
-      const isNumeric = typeof end === 'number';
-
-      function tick(now) {
-        const progress = Math.min((now - startTime) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        if (isNumeric) {
-          el.textContent = Math.round(start + (end - start) * eased) + suffix;
-        } else {
-          el.textContent = progress >= 1 ? end : '—';
-        }
-        if (progress < 1) requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    }
-
-    /* ── Stats ── */
-    function updateStats() {
-      const students = allStudents;
-      const total = students.length;
-      const faculties = new Set(students.map(s => s.faculty)).size;
-      const activeCount = students.filter(s => s.status === 'Active').length;
-
-      const yearCounts = {};
-      students.forEach(s => {
-        const y = s.year || 'Year 1';
-        yearCounts[y] = (yearCounts[y] || 0) + 1;
-      });
-      let commonYear = 'Year 1';
-      let maxCount = 0;
-      Object.entries(yearCounts).forEach(([yr, count]) => {
-        if (count > maxCount) { maxCount = count; commonYear = yr; }
-      });
-      if (total === 0) commonYear = '—';
-
-      animateValue(document.getElementById('statTotalStudents'), total);
-      animateValue(document.getElementById('statFaculties'), faculties);
-      animateValue(document.getElementById('statActiveStudents'), activeCount);
-      animateValue(document.getElementById('statYear'), commonYear);
-    }
-
-    /* ── Render table ── */
-    function renderTable(students) {
-      const tbody = document.getElementById('studentsTableBody');
-      const badge = document.getElementById('studentCountBadge');
-      badge.textContent = allStudents.length;
-
-      if (!students.length) {
-        tbody.innerHTML = `<tr><td colspan="8">
-          <div class="empty-state">
-            <i class="bi bi-person-x"></i>
-            <h3>No students found.</h3>
-            <p>Try adjusting your search or add a new student above.</p>
-          </div>
-        </td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = students.map((s, i) => {
-        const chipClass = FACULTY_CLASS[s.faculty] || 'faculty-default';
-        const statusClass = STATUS_CLASS[s.status] || 'status-active';
-        const color = avatarColor(s.fullName);
-        return `<tr>
-          <td style="color:var(--text-secondary);font-weight:500;">${i + 1}</td>
-          <td><strong>${esc(s.studentId)}</strong></td>
-          <td>
-            <div class="student-name-cell">
-              <span class="avatar-circle" style="background:${color};">${esc(initials(s.fullName))}</span>
-              <span>${esc(s.fullName)}</span>
-            </div>
-          </td>
-          <td><span class="faculty-chip ${chipClass}">${esc(s.faculty)}</span></td>
-          <td>${esc(s.year || '—')}</td>
-          <td>${esc(s.email)}</td>
-          <td>${esc(s.phone || '—')}</td>
-          <td><span class="status-pill ${statusClass}">${esc(s.status || 'Active')}</span></td>
-        </tr>`;
-      }).join('');
-    }
-
-    function esc(str) {
-      const d = document.createElement('div');
-      d.textContent = str;
-      return d.innerHTML;
-    }
-
-    /* ── Filter ── */
-    function filterStudents() {
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
-      const faculty = document.getElementById('facultyFilter').value;
-      const status = document.getElementById('statusFilter').value;
-
-      filteredStudents = allStudents.filter(s => {
-        const matchFaculty = !faculty || s.faculty === faculty;
-        const matchStatus = !status || s.status === status;
-        const matchSearch = !query ||
-          s.studentId.toLowerCase().includes(query) ||
-          s.fullName.toLowerCase().includes(query) ||
-          (s.email && s.email.toLowerCase().includes(query));
-        return matchFaculty && matchStatus && matchSearch;
-      });
-
-      renderTable(filteredStudents);
-    }
-
-    /* ── Load students ── */
+    /* ── Load Students from Backend ── */
     async function loadStudents() {
-      showSkeleton();
-      try {
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error('API error');
-        const data = await res.json();
+        try {
+            console.log("🔄 Loading students from:", API_URL);
 
-        if (!data || data.length === 0) {
-          usingFallback = true;
-          allStudents = SAMPLE_STUDENTS.map(s => ({ ...s }));
-        } else {
-          usingFallback = false;
-          allStudents = data.map((s, i) => enrichStudent(s, i));
+            const response = await fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error! Status: ${response.status}`);
+            }
+
+            const students = await response.json();
+            console.log("✅ Students loaded:", students.length);
+
+            allStudents = students;
+            renderTable(students);
+
+        } catch (error) {
+            console.error("❌ Load Error:", error);
+            showToast("Failed to load students from server", "error");
+
+            // Fallback message
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:#666;">
+                Cannot connect to server.<br>Please check backend is running.
+            </td></tr>`;
         }
-      } catch {
-        usingFallback = true;
-        allStudents = SAMPLE_STUDENTS.map(s => ({ ...s }));
-        showToast('Could not reach API — showing sample data.', 'error');
-      }
-
-      filteredStudents = [...allStudents];
-      renderTable(filteredStudents);
-      updateStats();
     }
 
-    /* ── Validation ── */
-    function setFieldError(fieldId, errorId, message) {
-      const field = document.getElementById(fieldId);
-      const error = document.getElementById(errorId);
-      if (message) {
-        field.classList.add('is-invalid');
-        error.querySelector('span').textContent = message;
-        error.classList.add('visible');
-      } else {
-        field.classList.remove('is-invalid');
-        error.classList.remove('visible');
-      }
+    /* ── Render Table ── */
+    function renderTable(students) {
+        const tbody = document.getElementById('studentsTableBody');
+        const badge = document.getElementById('studentCountBadge');
+
+        badge.textContent = students.length;
+
+        if (!students || students.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;">
+                <strong>No students found.</strong>
+            </td></tr>`;
+            return;
+        }
+
+        let rows = '';
+        students.forEach((s, i) => {
+            rows += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${escapeHtml(s.studentId || '')}</strong></td>
+                    <td>${escapeHtml(s.fullName || '')}</td>
+                    <td>${escapeHtml(s.faculty || '')}</td>
+                    <td>${escapeHtml(s.yearOfStudy || '')}</td>
+                    <td>${escapeHtml(s.email || '')}</td>
+                    <td>${escapeHtml(s.phoneNumber || '')}</td>
+                    <td><span class="status-pill status-active">Active</span></td>
+                </tr>`;
+        });
+        tbody.innerHTML = rows;
     }
 
-    function isValidEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
-    function validateForm() {
-      let valid = true;
-      const studentId = document.getElementById('studentId').value.trim();
-      const fullName = document.getElementById('fullName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const faculty = document.getElementById('faculty').value;
+    /* ── Add New Student ── */
+    async function addStudent(event) {
+        event.preventDefault();
 
-      setFieldError('studentId', 'errorStudentId', !studentId ? 'Student ID is required.' : '');
-      if (!studentId) valid = false;
+        const payload = {
+            studentId: document.getElementById('studentId').value.trim(),
+            fullName: document.getElementById('fullName').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            faculty: document.getElementById('faculty').value,
+            yearOfStudy: document.getElementById('year').value,
+            phoneNumber: document.getElementById('phone').value.trim()
+        };
 
-      setFieldError('fullName', 'errorFullName', !fullName ? 'Full name is required.' : '');
-      if (!fullName) valid = false;
+        console.log("📤 Sending payload:", payload);
 
-      let emailError = '';
-      if (!email) emailError = 'Email address is required.';
-      else if (!isValidEmail(email)) emailError = 'Enter a valid email address.';
-      setFieldError('email', 'errorEmail', emailError);
-      if (emailError) valid = false;
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
 
-      setFieldError('faculty', 'errorFaculty', !faculty ? 'Please select a faculty.' : '');
-      if (!faculty) valid = false;
+            console.log("Response status:", response.status);
 
-      return valid;
+            if (response.ok) {
+                showToast("✅ Student saved successfully!", "success");
+                document.getElementById('addStudentForm').reset();
+                loadStudents();           // Refresh table
+            } else {
+                const errorText = await response.text();
+                console.error("Server error:", errorText);
+                showToast(`❌ Failed to save (Status: ${response.status})`, "error");
+            }
+        } catch (error) {
+            console.error("❌ Save Error:", error);
+            showToast("Cannot connect to backend. Check console (F12)", "error");
+        }
     }
 
-    /* ── Add student ── */
-    async function addStudent(e) {
-      e.preventDefault();
-      if (!validateForm()) return;
+    /* ── Clear Form ── */
+    function clearForm() {
+        document.getElementById('addStudentForm').reset();
+    }
 
-      const studentId = document.getElementById('studentId').value.trim();
-      const fullName = document.getElementById('fullName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const faculty = document.getElementById('faculty').value;
-      const year = document.getElementById('year').value;
-      const phone = document.getElementById('phone').value.trim() || '—';
+    /* ── Sidebar Toggle ── */
+    function initSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggle = document.getElementById('mobileToggle');
 
-      const payload = { studentId, fullName, email, faculty };
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Saving…';
-
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
         });
 
-        if (!res.ok) throw new Error('Save failed');
-
-        const saved = await res.json();
-        saveExtra(studentId, year, phone);
-
-        const newStudent = enrichStudent(saved, allStudents.length);
-        newStudent.year = year;
-        newStudent.phone = phone;
-        newStudent.status = 'Active';
-
-        allStudents.unshift(newStudent);
-        usingFallback = false;
-        filterStudents();
-        updateStats();
-        clearForm();
-        showToast(`"${fullName}" added successfully.`);
-      } catch {
-        const localStudent = {
-          id: Date.now(),
-          studentId, fullName, email, faculty,
-          year, phone, status: 'Active'
-        };
-        saveExtra(studentId, year, phone);
-        allStudents.unshift(localStudent);
-        filterStudents();
-        updateStats();
-        clearForm();
-        showToast('Student saved locally — API unavailable.', 'error');
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="bi bi-check-lg"></i> Save Student';
-      }
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
     }
 
-    /* ── Clear form ── */
-    function clearForm() {
-      document.getElementById('addStudentForm').reset();
-      ['studentId', 'fullName', 'email', 'faculty'].forEach(id => {
-        document.getElementById(id).classList.remove('is-invalid');
-      });
-      document.querySelectorAll('.field-error').forEach(el => el.classList.remove('visible'));
-    }
+    /* ── Initialize Everything ── */
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("🚀 Student Management Page Loaded");
 
-    /* ── Sidebar toggle ── */
-    function initSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebarOverlay');
-      const toggle = document.getElementById('mobileToggle');
+        loadStudents();           // Load data on start
+        initSidebar();
 
-      toggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('open');
-      });
-
-      overlay.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('open');
-      });
-    }
-
-    /* ── Init ── */
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('addStudentForm').addEventListener('submit', addStudent);
-      initSidebar();
-      loadStudents();
+        // Attach form submit
+        const form = document.getElementById('addStudentForm');
+        if (form) {
+            form.addEventListener('submit', addStudent);
+        } else {
+            console.error("Form not found!");
+        }
     });
   </script>
 </body>
