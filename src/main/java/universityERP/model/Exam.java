@@ -2,7 +2,7 @@ package universityERP.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "exams")
@@ -13,20 +13,19 @@ public class Exam {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long courseId;
+    private String examCode;
 
-    @Column(nullable = false)
-    private String examName;  // Midterm, Final, Quiz etc.
+    private String courseName;
 
-    @Column(nullable = false)
-    private LocalDateTime examDate;
+    private String examType;
 
-    private Integer durationMinutes = 120;
+    private Integer maxMarks;
+
+    private LocalDate examDate;
+
+    private Integer duration;
 
     private String venue;
 
-    private Double totalMarks = 100.0;
-
-    private Boolean isActive = true;
+    private String status;
 }

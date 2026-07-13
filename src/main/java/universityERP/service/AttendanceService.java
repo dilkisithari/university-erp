@@ -2,31 +2,28 @@ package universityERP.service;
 
 import universityERP.model.Attendance;
 import universityERP.repository.AttendanceRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AttendanceService {
 
-    @Autowired
-    private AttendanceRepository attendanceRepository;
+    private final AttendanceRepository attendanceRepository;
+
+    public AttendanceService(
+            AttendanceRepository attendanceRepository) {
+
+        this.attendanceRepository = attendanceRepository;
+    }
 
     public List<Attendance> getAllAttendance() {
         return attendanceRepository.findAll();
     }
 
-    public Optional<Attendance> getAttendanceById(Long id) {
-        return attendanceRepository.findById(id);
-    }
+    public Attendance saveAttendance(
+            Attendance attendance) {
 
-    public Attendance saveAttendance(Attendance attendance) {
         return attendanceRepository.save(attendance);
-    }
-
-    public void deleteAttendance(Long id) {
-        attendanceRepository.deleteById(id);
     }
 }

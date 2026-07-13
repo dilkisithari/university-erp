@@ -2,33 +2,37 @@ package universityERP.controller;
 
 import universityERP.model.Attendance;
 import universityERP.service.AttendanceService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-@CrossOrigin(origins = "*")   // Allow requests from anywhere (for development)
-@Controller
-@RequestMapping("/attendance")
+
+import java.util.List;
+
+@RestController
+@CrossOrigin(origins = "*")
+@RequestMapping("/api/attendance")
 public class AttendanceController {
 
-    @Autowired
-    private AttendanceService attendanceService;
+    private final AttendanceService attendanceService;
 
-    @GetMapping
-    public String listAttendance(Model model) {
-        model.addAttribute("attendances", attendanceService.getAllAttendance());
-        return "attendance/list";
+    public AttendanceController(
+            AttendanceService attendanceService) {
+
+        this.attendanceService = attendanceService;
     }
 
-    @GetMapping("/new")
-    public String newAttendanceForm(Model model) {
-        model.addAttribute("attendance", new Attendance());
-        return "attendance/form";
+    @GetMapping
+    public List<Attendance> getAllAttendance() {
+        return attendanceService.getAllAttendance();
     }
 
     @PostMapping
-    public String saveAttendance(@ModelAttribute Attendance attendance) {
-        attendanceService.saveAttendance(attendance);
-        return "redirect:/attendance";
+    public Attendance saveAttendance(
+            @RequestBody Attendance attendance) {
+
+        return attendanceService.saveAttendance(attendance);
+    }
+
+    @GetMapping("/test")
+    public String test() {
+        return "Attendance API Working";
     }
 }

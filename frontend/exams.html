@@ -875,6 +875,9 @@
       data resets on page reload. This matches the same visual
       design as courses.html but skips the database wiring.
     */
+   const API_URL =
+    "http://localhost:8080/api/exams";
+
  
     let allExams = [];
     let filteredExams = [];
@@ -998,13 +1001,20 @@
     }
  
     /* ── Load exams (local sample data only, no API/database) ── */
-    function loadExams() {
-      allExams = SAMPLE_EXAMS.map(e => ({ ...e }));
-      filteredExams = [...allExams];
-      renderTable(filteredExams);
-      updateStats();
-    }
- 
+    async function loadExams() {
+
+    const response =
+        await fetch(API_URL);
+
+    const data =
+        await response.json();
+
+    allExams = data;
+    filteredExams = [...data];
+
+    renderTable(filteredExams);
+    updateStats();
+}
     /* ── Validation ── */
     function setFieldError(fieldId, errorId, message) {
       const field = document.getElementById(fieldId);
@@ -1058,38 +1068,80 @@
     }
  
     /* ── Add exam (in-memory only — no database write) ── */
-    function addExam(e) {
-      e.preventDefault();
-      if (!validateForm()) return;
- 
-      const examCode = document.getElementById('examCode').value.trim();
-      const courseName = document.getElementById('courseName').value.trim();
-      const examType = document.getElementById('examType').value;
-      const maxMarks = parseInt(document.getElementById('maxMarks').value, 10);
-      const examDate = document.getElementById('examDate').value;
-      const duration = parseInt(document.getElementById('duration').value, 10);
-      const venue = document.getElementById('venue').value.trim() || 'TBA';
- 
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Saving…';
- 
-      setTimeout(() => {
-        const newExam = {
-          id: Date.now(),
-          examCode, courseName, examType, examDate, duration, maxMarks, venue,
-          status: 'Scheduled'
-        };
-        allExams.unshift(newExam);
-        filterExams();
-        updateStats();
-        clearForm();
-        showToast(`"${examCode}" scheduled successfully.`);
- 
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="bi bi-check-lg"></i> Save Exam';
-      }, 300);
+    async function addExam(e) {
+
+    e.preventDefault();
+
+    if (!validateForm()) {
+        return;
     }
+
+    const payload = {
+
+        examCode:
+            document.getElementById("examCode").value.trim(),
+
+        courseName:
+            document.getElementById("courseName").value.trim(),
+
+        examType:
+            document.getElementById("examType").value,
+
+        maxMarks:
+            parseInt(
+                document.getElementById("maxMarks").value
+            ),
+
+        examDate:
+            document.getElementById("examDate").value,
+
+        duration:
+            parseInt(
+                document.getElementById("duration").value
+            ),
+
+        venue:
+            document.getElementById("venue").value.trim(),
+
+        status:
+            "Scheduled"
+    };
+
+    try {
+
+        const response = await fetch(
+            "http://localhost:8080/api/exams",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "HTTP " + response.status
+            );
+        }
+
+        showToast("Exam saved successfully");
+
+        clearForm();
+
+        loadExams();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Failed to save exam",
+            "error"
+        );
+    }
+}
  
     /* ── Clear form ── */
     function clearForm() {

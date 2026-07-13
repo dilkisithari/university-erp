@@ -1,15 +1,14 @@
 package universityERP.service;
 
-import universityERP.dto.DashboardSummaryResponse;   // or whatever DTO it uses
-import universityERP.repository.StudentRepository;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import org.springframework.stereotype.Service;
+import universityERP.dto.DashboardSummaryResponse;
 import universityERP.repository.AttendanceRepository;
 import universityERP.repository.CourseRepository;
 import universityERP.repository.ExamRepository;
+import universityERP.repository.StudentRepository;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class DashboardService {
@@ -24,6 +23,7 @@ public class DashboardService {
             CourseRepository courseRepository,
             ExamRepository examRepository,
             AttendanceRepository attendanceRepository) {
+
         this.studentRepository = studentRepository;
         this.courseRepository = courseRepository;
         this.examRepository = examRepository;
@@ -31,34 +31,45 @@ public class DashboardService {
     }
 
     public DashboardSummaryResponse getSummary() {
+
         long totalStudents = studentRepository.count();
+
         long totalCourses = courseRepository.count();
+
         long examsScheduled =
-                examRepository.countByIsActiveTrueAndExamDateGreaterThanEqual(LocalDateTime.now());
-        double attendanceRate = calculateTodayAttendanceRate();
+                examRepository.count();
+
+        double attendanceRate =
+                calculateAttendanceRate();
 
         return new DashboardSummaryResponse(
-                totalStudents, totalCourses, examsScheduled, attendanceRate);
+                totalStudents,
+                totalCourses,
+                examsScheduled,
+                attendanceRate
+        );
     }
 
-    private double calculateTodayAttendanceRate() {
-        LocalDate today = LocalDate.now();
-        LocalDateTime start = today.atStartOfDay();
-        LocalDateTime end = today.plusDays(1).atStartOfDay();
+    private double calculateAttendanceRate() {
 
-        long totalToday =
-                attendanceRepository.countByAttendanceDateGreaterThanEqualAndAttendanceDateLessThan(
-                        start, end);
-        if (totalToday == 0L) {
+        long total =
+                attendanceRepository.count();
+
+        if (total == 0) {
             return 0.0;
         }
 
-        long attended = attendanceRepository.countAttendedBetween(start, end);
-        double rate = (attended * 100.0) / totalToday;
-        if (Double.isNaN(rate) || Double.isInfinite(rate)) {
-            return 0.0;
-        }
+        long present =
+                attendanceRepository.findAll()
+                        .stream()
+                        .filter(a ->
+                                "Present".equalsIgnoreCase(
+                                        a.getStatus()))
+                        .count();
 
-        return BigDecimal.valueOf(rate).setScale(1, RoundingMode.HALF_UP).doubleValue();
+        return BigDecimal.valueOf(
+                        (present * 100.0) / total)
+                .setScale(1, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 }

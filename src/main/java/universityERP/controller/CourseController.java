@@ -2,33 +2,33 @@ package universityERP.controller;
 
 import universityERP.model.Course;
 import universityERP.service.CourseService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-@CrossOrigin(origins = "*")   // Allow requests from anywhere (for development)
-@Controller
-@RequestMapping("/courses")
+
+import java.util.List;
+
+@CrossOrigin(origins = "*")
+@RestController
+@RequestMapping("/api/courses")
 public class CourseController {
 
-    @Autowired
-    private CourseService courseService;
+    private final CourseService courseService;
 
-    @GetMapping
-    public String listCourses(Model model) {
-        model.addAttribute("courses", courseService.getAllCourses());
-        return "courses/list";
+    public CourseController(CourseService courseService) {
+        this.courseService = courseService;
     }
 
-    @GetMapping("/new")
-    public String newCourseForm(Model model) {
-        model.addAttribute("course", new Course());
-        return "courses/form";
+    @GetMapping
+    public List<Course> getAllCourses() {
+        return courseService.getAllCourses();
     }
 
     @PostMapping
-    public String saveCourse(@ModelAttribute Course course) {
-        courseService.saveCourse(course);
-        return "redirect:/courses";
+    public Course addCourse(@RequestBody Course course) {
+        return courseService.saveCourse(course);
+    }
+
+    @GetMapping("/test")
+    public String test() {
+        return "Course API Working";
     }
 }

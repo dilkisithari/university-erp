@@ -23,7 +23,7 @@ public class Course {
 
     private Integer credits = 3;
 
-    private String department;
+    private String faculty;
 
     private LocalDate startDate;
     private LocalDate endDate;

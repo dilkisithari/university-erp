@@ -2,33 +2,28 @@ package universityERP.controller;
 
 import universityERP.model.Exam;
 import universityERP.service.ExamService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-@CrossOrigin(origins = "*")   // Allow requests from anywhere (for development)
-@Controller
-@RequestMapping("/exams")
+
+import java.util.List;
+
+@RestController
+@CrossOrigin(origins = "*")
+@RequestMapping("/api/exams")
 public class ExamController {
 
-    @Autowired
-    private ExamService examService;
+    private final ExamService examService;
 
-    @GetMapping
-    public String listExams(Model model) {
-        model.addAttribute("exams", examService.getAllExams());
-        return "exams/list";
+    public ExamController(ExamService examService) {
+        this.examService = examService;
     }
 
-    @GetMapping("/new")
-    public String newExamForm(Model model) {
-        model.addAttribute("exam", new Exam());
-        return "exams/form";
+    @GetMapping
+    public List<Exam> getAllExams() {
+        return examService.getAllExams();
     }
 
     @PostMapping
-    public String saveExam(@ModelAttribute Exam exam) {
-        examService.saveExam(exam);
-        return "redirect:/exams";
+    public Exam saveExam(@RequestBody Exam exam) {
+        return examService.saveExam(exam);
     }
 }

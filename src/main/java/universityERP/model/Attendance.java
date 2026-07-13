@@ -2,7 +2,7 @@ package universityERP.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "attendance")
@@ -13,17 +13,15 @@ public class Attendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long studentId;
+    private String studentId;
 
-    @Column(nullable = false)
-    private Long courseId;
+    private String studentName;
 
-    @Column(nullable = false)
-    private LocalDateTime attendanceDate;
+    private String courseName;
 
-    @Column(nullable = false)
-    private String status;  // PRESENT, ABSENT, LATE
+    private LocalDate attendanceDate;
+
+    private String status;
 
     private String remarks;
 }
