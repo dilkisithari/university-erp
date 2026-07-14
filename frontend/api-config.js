@@ -3,7 +3,7 @@
  * Local Development
  */
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "https://university-erp-api-sithari-hzeeg3aph9bpcaas.eastasia-01.azurewebsites.net",;
 
 console.log("✅ API Config Loaded - Base URL:", API_BASE_URL);
 
