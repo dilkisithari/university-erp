@@ -931,10 +931,11 @@
 
     if (typeof window.API_BASE_URL === 'undefined') {
        console.error("❌ API_BASE_URL is not defined. Using localhost fallback.");
-       window.API_BASE_URL = "http://localhost:8080/api";
+       window.API_BASE_URL = "https://university-erp-api-sithari-hzeeg3aph9bpcaas.eastasia-01.azurewebsites.net";
+
 }
 
-    const API_URL = `${window.API_BASE_URL}/students`;
+    const API_URL = `${window.API_BASE_URL}/api/students`;
 
     let allStudents = [];
 
